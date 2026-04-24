@@ -1,0 +1,295 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum PerfilGlobal {
+  USUARIO_MAIOR
+  GESTOR_SENTOR
+  OPERADOR_SENTOR
+}
+
+enum PerfilNoSentor {
+  GESTOR_SENTOR
+  OPERADOR_SENTOR
+}
+
+enum StatusFormulario {
+  RASCUNHO
+  PUBLICADO
+  ARQUIVADO
+}
+
+enum TipoResposta {
+  ANONIMA
+  IDENTIFICADA
+}
+
+enum Turno {
+  MANHA
+  TARDE
+  NOITE
+}
+
+enum TipoAlerta {
+  CSAT_BAIXO_24H
+  NPS_NEGATIVO
+  QUEDA_CSAT
+  PICO_BLOQUEIO_ANTISPAM
+}
+
+enum SeveridadeAlerta {
+  INFO
+  AVISO
+  CRITICO
+}
+
+enum StatusAlerta {
+  ABERTO
+  RESOLVIDO
+}
+
+model Hospital {
+  id          String       @id @default(cuid())
+  nome        String
+  timezone    String       @default("America/Sao_Paulo")
+  ativo       Boolean      @default(true)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+  sentores    Sentor[]
+  usuarios    Usuario[]
+  formularios Formulario[]
+
+  @@map("hospital")
+}
+
+model Sentor {
+  id                String                 @id @default(cuid())
+  hospitalId        String                 @map("hospital_id")
+  nome              String
+  codigo            String?
+  localizacao       String?
+  ativo             Boolean                @default(true)
+  createdAt         DateTime               @default(now()) @map("created_at")
+  updatedAt         DateTime               @updatedAt @map("updated_at")
+  hospital          Hospital               @relation(fields: [hospitalId], references: [id], onDelete: Restrict)
+  qr                SentorQr?
+  usuariosSentor    UsuarioSentor[]
+  formularioAtivo   SentorFormularioAtivo?
+  respostas         Resposta[]
+  alertas           Alerta[]
+  bloqueiosAntiSpam BloqueioAntiSpam[]
+
+  @@unique([hospitalId, codigo])
+  @@index([hospitalId])
+  @@map("sentor")
+}
+
+model SentorQr {
+  id               String   @id @default(cuid())
+  sentorId         String   @unique @map("sentor_id")
+  slugPublicoUnico String   @unique @map("slug_publico_unico")
+  urlPublica       String   @map("url_publica")
+  qrPngUrl         String?  @map("qr_png_url")
+  qrSvgUrl         String?  @map("qr_svg_url")
+  createdAt        DateTime @default(now()) @map("created_at")
+  sentor           Sentor   @relation(fields: [sentorId], references: [id], onDelete: Cascade)
+
+  @@map("sentor_qr")
+}
+
+model Usuario {
+  id                  String                  @id @default(cuid())
+  hospitalId          String                  @map("hospital_id")
+  nome                String
+  email               String                  @unique
+  senhaHash           String                  @map("senha_hash")
+  perfilGlobal        PerfilGlobal            @map("perfil_global")
+  ativo               Boolean                 @default(true)
+  createdAt           DateTime                @default(now()) @map("created_at")
+  updatedAt           DateTime                @updatedAt @map("updated_at")
+  hospital            Hospital                @relation(fields: [hospitalId], references: [id], onDelete: Restrict)
+  sentores            UsuarioSentor[]
+  formulariosCriados  Formulario[]            @relation("FormularioCriadoPor")
+  versoesPublicadas   FormularioVersao[]      @relation("VersaoPublicadaPor")
+  formulariosAtivados SentorFormularioAtivo[] @relation("FormularioAtivadoPor")
+  auditorias          Auditoria[]
+
+  @@index([hospitalId])
+  @@map("usuario")
+}
+
+model UsuarioSentor {
+  id             String         @id @default(cuid())
+  usuarioId      String         @map("usuario_id")
+  sentorId       String         @map("sentor_id")
+  perfilNoSentor PerfilNoSentor @map("perfil_no_sentor")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  usuario        Usuario        @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  sentor         Sentor         @relation(fields: [sentorId], references: [id], onDelete: Cascade)
+
+  @@unique([usuarioId, sentorId])
+  @@index([sentorId])
+  @@map("usuario_sentor")
+}
+
+model Formulario {
+  id             String                  @id @default(cuid())
+  hospitalId     String                  @map("hospital_id")
+  nome           String
+  descricao      String?
+  criadoPorId    String                  @map("criado_por")
+  status         StatusFormulario        @default(RASCUNHO)
+  createdAt      DateTime                @default(now()) @map("created_at")
+  updatedAt      DateTime                @updatedAt @map("updated_at")
+  hospital       Hospital                @relation(fields: [hospitalId], references: [id], onDelete: Restrict)
+  criadoPor      Usuario                 @relation("FormularioCriadoPor", fields: [criadoPorId], references: [id], onDelete: Restrict)
+  versoes        FormularioVersao[]
+  sentoresAtivos SentorFormularioAtivo[]
+  respostas      Resposta[]
+
+  @@index([hospitalId])
+  @@index([criadoPorId])
+  @@map("formulario")
+}
+
+model FormularioVersao {
+  id             String                  @id @default(cuid())
+  formularioId   String                  @map("formulario_id")
+  numeroVersao   Int                     @map("numero_versao")
+  estruturaJson  Json                    @map("estrutura_json")
+  publicadoEm    DateTime?               @map("publicado_em")
+  publicadoPorId String?                 @map("publicado_por")
+  createdAt      DateTime                @default(now()) @map("created_at")
+  formulario     Formulario              @relation(fields: [formularioId], references: [id], onDelete: Cascade)
+  publicadoPor   Usuario?                @relation("VersaoPublicadaPor", fields: [publicadoPorId], references: [id], onDelete: SetNull)
+  sentoresAtivos SentorFormularioAtivo[]
+  respostas      Resposta[]
+
+  @@unique([formularioId, numeroVersao])
+  @@index([publicadoPorId])
+  @@map("formulario_versao")
+}
+
+model SentorFormularioAtivo {
+  id           String           @id @default(cuid())
+  sentorId     String           @unique @map("sentor_id")
+  formularioId String           @map("formulario_id")
+  versaoId     String           @map("versao_id")
+  ativadoEm    DateTime         @default(now()) @map("ativado_em")
+  ativadoPorId String           @map("ativado_por")
+  sentor       Sentor           @relation(fields: [sentorId], references: [id], onDelete: Cascade)
+  formulario   Formulario       @relation(fields: [formularioId], references: [id], onDelete: Restrict)
+  versao       FormularioVersao @relation(fields: [versaoId], references: [id], onDelete: Restrict)
+  ativadoPor   Usuario          @relation("FormularioAtivadoPor", fields: [ativadoPorId], references: [id], onDelete: Restrict)
+
+  @@index([formularioId])
+  @@index([versaoId])
+  @@index([ativadoPorId])
+  @@map("sentor_formulario_ativo")
+}
+
+model Resposta {
+  id                String           @id @default(cuid())
+  sentorId          String           @map("sentor_id")
+  formularioId      String           @map("formulario_id")
+  versaoId          String           @map("versao_id")
+  tipoResposta      TipoResposta     @map("tipo_resposta")
+  nome              String?
+  telefone          String?
+  cpfMasked         String?          @map("cpf_masked")
+  cpfHash           String?          @map("cpf_hash")
+  cpfEncrypted      String?          @map("cpf_encrypted")
+  consentimentoLgpd Boolean?         @map("consentimento_lgpd")
+  turno             Turno
+  notaPrincipal     Int?             @map("nota_principal")
+  notaBaixa         Boolean          @default(false) @map("nota_baixa")
+  sugestaoMelhoria  String?          @map("sugestao_melhoria") @db.Text
+  ipHash            String?          @map("ip_hash")
+  userAgentHash     String?          @map("user_agent_hash")
+  sessionTokenHash  String?          @map("session_token_hash")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  sentor            Sentor           @relation(fields: [sentorId], references: [id], onDelete: Restrict)
+  formulario        Formulario       @relation(fields: [formularioId], references: [id], onDelete: Restrict)
+  versao            FormularioVersao @relation(fields: [versaoId], references: [id], onDelete: Restrict)
+  itens             RespostaItem[]
+
+  @@index([sentorId, createdAt])
+  @@index([sentorId, turno, createdAt])
+  @@index([notaBaixa, createdAt])
+  @@index([cpfHash, createdAt])
+  @@map("resposta")
+}
+
+model RespostaItem {
+  id           String   @id @default(cuid())
+  respostaId   String   @map("resposta_id")
+  perguntaId   String   @map("pergunta_id")
+  tipoPergunta String   @map("tipo_pergunta")
+  valorTexto   String?  @map("valor_texto") @db.Text
+  valorNumero  Float?   @map("valor_numero")
+  valorJson    Json?    @map("valor_json")
+  createdAt    DateTime @default(now()) @map("created_at")
+  resposta     Resposta @relation(fields: [respostaId], references: [id], onDelete: Cascade)
+
+  @@index([respostaId])
+  @@index([perguntaId])
+  @@map("resposta_item")
+}
+
+model Alerta {
+  id          String           @id @default(cuid())
+  tipoAlerta  TipoAlerta       @map("tipo_alerta")
+  sentorId    String           @map("sentor_id")
+  severidade  SeveridadeAlerta
+  titulo      String
+  descricao   String           @db.Text
+  status      StatusAlerta     @default(ABERTO)
+  disparadoEm DateTime         @default(now()) @map("disparado_em")
+  resolvidoEm DateTime?        @map("resolvido_em")
+  createdAt   DateTime         @default(now()) @map("created_at")
+  updatedAt   DateTime         @updatedAt @map("updated_at")
+  sentor      Sentor           @relation(fields: [sentorId], references: [id], onDelete: Restrict)
+
+  @@index([sentorId, status])
+  @@index([disparadoEm])
+  @@map("alerta")
+}
+
+model Auditoria {
+  id         String   @id @default(cuid())
+  usuarioId  String?  @map("usuario_id")
+  acao       String
+  entidade   String
+  entidadeId String   @map("entidade_id")
+  antesJson  Json?    @map("antes_json")
+  depoisJson Json?    @map("depois_json")
+  metaJson   Json?    @map("meta_json")
+  createdAt  DateTime @default(now()) @map("created_at")
+  usuario    Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([entidade, entidadeId])
+  @@index([createdAt])
+  @@map("auditoria")
+}
+
+model BloqueioAntiSpam {
+  id               String   @id @default(cuid())
+  sentorId         String   @map("sentor_id")
+  sessionTokenHash String?  @map("session_token_hash")
+  ipHash           String?  @map("ip_hash")
+  userAgentHash    String?  @map("user_agent_hash")
+  cpfHash          String?  @map("cpf_hash")
+  motivo           String
+  limiteEm         DateTime @map("limite_em")
+  createdAt        DateTime @default(now()) @map("created_at")
+  sentor           Sentor   @relation(fields: [sentorId], references: [id], onDelete: Restrict)
+
+  @@index([sentorId, createdAt])
+  @@index([limiteEm])
+  @@map("bloqueio_anti_spam")
+}

@@ -1,0 +1,16 @@
+{
+  "name": "sarisfacao",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/api"
+  ],
+  "scripts": {
+    "build": "npm run -w apps/api build",
+    "dev:api": "npm run -w apps/api dev",
+    "start:api": "npm run -w apps/api start",
+    "prisma:generate": "npm run -w apps/api prisma:generate",
+    "prisma:migrate": "npm run -w apps/api prisma:migrate",
+    "prisma:format": "npm run -w apps/api prisma:format"
+  }
+}
