@@ -29,7 +29,10 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 	Copy-Item apps/api/.env.example apps/api/.env
 	```
 
-3. Ajuste o valor de `DATABASE_URL` em `apps/api/.env`.
+3. Ajuste os valores em `apps/api/.env`:
+
+	- `DATABASE_URL` para seu PostgreSQL
+	- `PUBLIC_BASE_URL` para a URL base do ambiente (ex.: `http://localhost:3333`)
 
 4. Gere o Prisma Client e execute a migracao inicial:
 
@@ -78,6 +81,18 @@ Payload de refresh:
   "refreshToken": "<token>"
 }
 ```
+
+## Sentores (MVP protegido)
+
+Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
+
+- `POST /api/sentores` (somente `USUARIO_MAIOR`)
+- `GET /api/sentores` (`USUARIO_MAIOR`, `GESTOR_SENTOR`, `OPERADOR_SENTOR`)
+- `GET /api/sentores/:id` (`USUARIO_MAIOR`, `GESTOR_SENTOR`, `OPERADOR_SENTOR`)
+- `PUT /api/sentores/:id` (somente `USUARIO_MAIOR`)
+- `PATCH /api/sentores/:id/status` (somente `USUARIO_MAIOR`)
+
+No cadastro, o sistema ja cria o QR permanente com slug unico e URL publica.
 
 ## Scripts disponiveis
 
