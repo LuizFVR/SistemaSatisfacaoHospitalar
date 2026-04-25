@@ -5,12 +5,13 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PerfilGlobal } from '@prisma/client';
+import { PerfilGlobal, Prisma } from '@prisma/client';
 import { compare } from 'bcryptjs';
 import { env } from '../../config/env';
 import { PrismaService } from '../prisma/prisma.service';
 import {
   AccessTokenPayload,
+  AuthAuditContext,
   AuthTokensResponse,
   RefreshTokenPayload,
 } from './auth.types';
@@ -32,47 +33,120 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, senha: string): Promise<AuthTokensResponse> {
+  async login(
+    email: string,
+    senha: string,
+    context?: AuthAuditContext,
+  ): Promise<AuthTokensResponse> {
     const sanitizedEmail = email.trim().toLowerCase();
     const user = await this.findActiveUserByEmail(sanitizedEmail);
 
     if (!user) {
+      await this.auditAuthEvent({
+        acao: 'AUTH_LOGIN',
+        entidadeId: sanitizedEmail,
+        sucesso: false,
+        detalhe: 'Usuario nao encontrado ou inativo.',
+        context,
+      });
+
       throw new UnauthorizedException('Credenciais invalidas.');
     }
 
     const senhaConfere = await compare(senha, user.senhaHash);
 
     if (!senhaConfere) {
+      await this.auditAuthEvent({
+        acao: 'AUTH_LOGIN',
+        usuarioId: user.id,
+        entidadeId: user.id,
+        sucesso: false,
+        detalhe: 'Senha invalida.',
+        context,
+      });
+
       throw new UnauthorizedException('Credenciais invalidas.');
     }
 
-    return this.issueTokens(user);
+    const tokens = await this.issueTokens(user);
+
+    await this.auditAuthEvent({
+      acao: 'AUTH_LOGIN',
+      usuarioId: user.id,
+      entidadeId: user.id,
+      sucesso: true,
+      context,
+    });
+
+    return tokens;
   }
 
-  async refresh(refreshToken: string): Promise<AuthTokensResponse> {
+  async refresh(
+    refreshToken: string,
+    context?: AuthAuditContext,
+  ): Promise<AuthTokensResponse> {
     const payload = await this.verifyRefreshToken(refreshToken);
     const session = await this.validateRefreshSession(payload, refreshToken);
 
     const user = await this.findActiveUserById(payload.sub);
 
     if (!user) {
+      await this.auditAuthEvent({
+        acao: 'AUTH_REFRESH',
+        entidadeId: payload.sub,
+        sucesso: false,
+        detalhe: 'Usuario nao encontrado ou inativo.',
+        context,
+      });
+
       throw new UnauthorizedException('Usuario nao encontrado ou inativo.');
     }
 
     await this.revokeSessionById(session.id);
 
-    return this.issueTokens(user);
+    const tokens = await this.issueTokens(user);
+
+    await this.auditAuthEvent({
+      acao: 'AUTH_REFRESH',
+      usuarioId: user.id,
+      entidadeId: user.id,
+      sucesso: true,
+      context,
+    });
+
+    return tokens;
   }
 
-  async logout(userId: string, refreshToken: string): Promise<{ message: string }> {
+  async logout(
+    userId: string,
+    refreshToken: string,
+    context?: AuthAuditContext,
+  ): Promise<{ message: string }> {
     const payload = await this.verifyRefreshToken(refreshToken);
 
     if (payload.sub !== userId) {
+      await this.auditAuthEvent({
+        acao: 'AUTH_LOGOUT',
+        usuarioId: userId,
+        entidadeId: userId,
+        sucesso: false,
+        detalhe: 'Refresh token nao pertence ao usuario autenticado.',
+        context,
+      });
+
       throw new UnauthorizedException('Refresh token invalido para este usuario.');
     }
 
     const session = await this.validateRefreshSession(payload, refreshToken);
     await this.revokeSessionById(session.id);
+
+    await this.auditAuthEvent({
+      acao: 'AUTH_LOGOUT',
+      usuarioId: userId,
+      entidadeId: userId,
+      sucesso: true,
+      context,
+    });
 
     return { message: 'Logout realizado com sucesso.' };
   }
@@ -188,6 +262,36 @@ export class AuthService {
     }
 
     return payload;
+  }
+
+  private async auditAuthEvent(params: {
+    acao: string;
+    entidadeId: string;
+    usuarioId?: string;
+    sucesso: boolean;
+    detalhe?: string;
+    context?: AuthAuditContext;
+  }): Promise<void> {
+    const meta: Prisma.JsonObject = {
+      sucesso: params.sucesso,
+      detalhe: params.detalhe ?? null,
+      ip: params.context?.ip ?? null,
+      userAgent: params.context?.userAgent ?? null,
+    };
+
+    try {
+      await this.prisma.auditoria.create({
+        data: {
+          usuarioId: params.usuarioId ?? null,
+          acao: params.acao,
+          entidade: 'auth',
+          entidadeId: params.entidadeId,
+          metaJson: meta,
+        },
+      });
+    } catch {
+      // Avoid blocking authentication flow when audit storage fails.
+    }
   }
 
   private async validateRefreshSession(

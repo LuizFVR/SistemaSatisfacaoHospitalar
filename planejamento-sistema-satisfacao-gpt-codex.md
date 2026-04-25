@@ -6,8 +6,8 @@ Objetivo deste documento: servir como base unica para implementacao com GPT Code
 ## Status de Implementacao (Controle de Parada)
 
 - Ultima atualizacao: 2026-04-24
-- PONTO_DE_PARADA_ATUAL: Etapa 2 em andamento com Auth, Sentores e Formularios protegidos por RBAC.
-- Proximo passo imediato: aplicar migracoes Prisma no banco local e evoluir modulos de Relatorios/Alertas com guardas e permissoes.
+- PONTO_DE_PARADA_ATUAL: Etapa 2 em andamento com Auth, Sentores, Formularios, Relatorios e Alertas protegidos por RBAC.
+- Proximo passo imediato: aplicar migracoes Prisma no banco local e implementar geracao automatica de alertas por regra de negocio.
 
 Concluido nesta execucao:
 - [x] base do monorepo com scripts iniciais
@@ -18,17 +18,21 @@ Concluido nesta execucao:
 - [x] modulo Auth com endpoints de login, refresh e logout
 - [x] emissao e validacao de JWT (access e refresh)
 - [x] revogacao e rotacao de refresh token com sessao persistida
+- [x] auditoria de eventos de autenticacao (login, refresh, logout e falhas)
 - [x] base de RBAC com decorator/guard para perfil global
 - [x] seed inicial de hospital e usuario administrador
 - [x] modulo Sentores com rotas protegidas (POST/GET/GET por id/PUT/PATCH status)
 - [x] geracao de slug e URL publica do QR no cadastro de sentor
 - [x] modulo Formularios com rotas protegidas (POST/GET/GET por id/PUT/POST versao/POST publicar)
 - [x] fluxo de versionamento e publicacao com status PUBLICADO
+- [x] modulo Relatorios com endpoints CSAT/NPS/comparativos/notas baixas
+- [x] modulo Alertas com listagem e resolucao protegidas por perfil
 
 Pendencias para continuidade:
 - [ ] criar migracao inicial do banco (prisma migrate dev)
-- [ ] aplicar AuthGuard e RolesGuard nos modulos de dominio restantes (relatorios, alertas)
-- [ ] registrar auditoria de eventos de autenticacao (login, refresh, logout, tentativa invalida)
+- [ ] implementar geracao automatica de alertas (CSAT baixo, NPS negativo, queda CSAT, pico anti-spam)
+- [ ] vincular versao ativa de formulario por sentor com endpoint dedicado
+- [ ] adicionar testes de integracao para auth/sentores/formularios/relatorios/alertas
 
 ## 1) Contexto e Premissas Confirmadas
 

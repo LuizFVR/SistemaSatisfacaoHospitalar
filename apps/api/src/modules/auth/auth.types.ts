@@ -27,6 +27,11 @@ export type LogoutResponse = {
   userId: string;
 };
 
+export type AuthAuditContext = {
+  ip: string | null;
+  userAgent: string | null;
+};
+
 export type AuthTokensResponse = {
   tokenType: 'Bearer';
   accessToken: string;

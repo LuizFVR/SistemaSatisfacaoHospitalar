@@ -6,14 +6,19 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { Request } from 'express';
+import { Request as ExpressRequest } from 'express';
 import { z } from 'zod';
 import { AccessTokenGuard } from './access-token.guard';
 import { loginSchema, logoutSchema, refreshSchema } from './auth.schemas';
 import { AuthService } from './auth.service';
-import { AuthenticatedUser, AuthTokensResponse, LogoutResponse } from './auth.types';
+import {
+  AuthAuditContext,
+  AuthenticatedUser,
+  AuthTokensResponse,
+  LogoutResponse,
+} from './auth.types';
 
-type RequestWithUser = Request & { user?: AuthenticatedUser };
+type RequestWithUser = ExpressRequest & { user?: AuthenticatedUser };
 
 function parseBody<Schema extends z.ZodTypeAny>(
   schema: Schema,
@@ -37,17 +42,23 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('login')
-  async login(@Body() body: unknown): Promise<AuthTokensResponse> {
+  async login(
+    @Req() req: ExpressRequest,
+    @Body() body: unknown,
+  ): Promise<AuthTokensResponse> {
     const input = parseBody(loginSchema, body);
 
-    return this.authService.login(input.email, input.senha);
+    return this.authService.login(input.email, input.senha, this.toAuditContext(req));
   }
 
   @Post('refresh')
-  async refresh(@Body() body: unknown): Promise<AuthTokensResponse> {
+  async refresh(
+    @Req() req: ExpressRequest,
+    @Body() body: unknown,
+  ): Promise<AuthTokensResponse> {
     const input = parseBody(refreshSchema, body);
 
-    return this.authService.refresh(input.refreshToken);
+    return this.authService.refresh(input.refreshToken, this.toAuditContext(req));
   }
 
   @Post('logout')
@@ -65,8 +76,23 @@ export class AuthController {
     const input = parseBody(logoutSchema, body);
 
     return {
-      ...(await this.authService.logout(user.id, input.refreshToken)),
+      ...(await this.authService.logout(
+        user.id,
+        input.refreshToken,
+        this.toAuditContext(req),
+      )),
       userId: user.id,
+    };
+  }
+
+  private toAuditContext(req: ExpressRequest): AuthAuditContext {
+    const ip = req.ip ?? null;
+    const userAgentHeader = req.headers['user-agent'];
+    const userAgent = typeof userAgentHeader === 'string' ? userAgentHeader : null;
+
+    return {
+      ip,
+      userAgent,
     };
   }
 }

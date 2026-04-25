@@ -4,7 +4,7 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 
 ## Estrutura atual
 
-- `apps/api`: API backend com NestJS + Prisma (Etapa 2 em andamento: auth + RBAC + sentores + formularios)
+- `apps/api`: API backend com NestJS + Prisma (Etapa 2 em andamento: auth + RBAC + sentores + formularios + relatorios + alertas)
 - `apps/web-admin`: reservado para painel administrativo
 - `apps/web-public`: reservado para fluxo publico por QR
 - `packages/*`: reservado para pacotes compartilhados
@@ -95,6 +95,7 @@ Observacao:
 - O refresh token e persistido em sessao no banco.
 - No `refresh`, o token anterior e revogado e um novo par de tokens e emitido (rotacao).
 - No `logout`, a sessao vinculada ao refresh token informado e revogada.
+- Eventos de auth (login, refresh, logout e falhas) sao registrados na tabela de auditoria.
 
 ## Sentores (MVP protegido)
 
@@ -120,6 +121,27 @@ Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
 - `POST /api/formularios/:id/versoes/:versaoId/publicar` (`USUARIO_MAIOR`, `GESTOR_SENTOR`)
 
 Ao publicar uma versao, o formulario passa para status `PUBLICADO`.
+
+## Relatorios (MVP protegido)
+
+Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
+
+- `GET /api/relatorios/csat?sentorId=&de=&ate=&turno=`
+- `GET /api/relatorios/nps?sentorId=&de=&ate=&turno=`
+- `GET /api/relatorios/comparativo-sentores?de=&ate=&turno=`
+- `GET /api/relatorios/comparativo-turnos?sentorId=&de=&ate=`
+- `GET /api/relatorios/notas-baixas?sentorId=&de=&ate=`
+
+Perfis permitidos: `USUARIO_MAIOR`, `GESTOR_SENTOR`, `OPERADOR_SENTOR`.
+
+## Alertas (MVP protegido)
+
+Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
+
+- `GET /api/alertas?sentorId=&status=&de=&ate=&limit=`
+- `PATCH /api/alertas/:id/resolver`
+
+Perfis permitidos: `USUARIO_MAIOR`, `GESTOR_SENTOR`.
 
 ## Scripts disponiveis
 
