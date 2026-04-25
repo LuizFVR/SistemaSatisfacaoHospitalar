@@ -7,7 +7,7 @@ Objetivo deste documento: servir como base unica para implementacao com GPT Code
 
 - Ultima atualizacao: 2026-04-24
 - PONTO_DE_PARADA_ATUAL: Etapa 2 em andamento com Auth (login/refresh/logout) e modulo de Sentores protegido com RBAC.
-- Proximo passo imediato: aplicar migracoes Prisma no banco local, evoluir modulos de Formularios/Relatorios com guardas e implementar revogacao de refresh token.
+- Proximo passo imediato: aplicar migracoes Prisma no banco local e evoluir modulos de Formularios/Relatorios com guardas e permissoes.
 
 Concluido nesta execucao:
 - [x] base do monorepo com scripts iniciais
@@ -17,6 +17,7 @@ Concluido nesta execucao:
 - [x] utilitarios de dominio para regra de turno e nota baixa
 - [x] modulo Auth com endpoints de login, refresh e logout
 - [x] emissao e validacao de JWT (access e refresh)
+- [x] revogacao e rotacao de refresh token com sessao persistida
 - [x] base de RBAC com decorator/guard para perfil global
 - [x] seed inicial de hospital e usuario administrador
 - [x] modulo Sentores com rotas protegidas (POST/GET/GET por id/PUT/PATCH status)
@@ -25,7 +26,7 @@ Concluido nesta execucao:
 Pendencias para continuidade:
 - [ ] criar migracao inicial do banco (prisma migrate dev)
 - [ ] aplicar AuthGuard e RolesGuard nos modulos de dominio restantes (formularios, relatorios, alertas)
-- [ ] adicionar revogacao de refresh token (persistencia de sessao) para logout invalidador
+- [ ] registrar auditoria de eventos de autenticacao (login, refresh, logout, tentativa invalida)
 
 ## 1) Contexto e Premissas Confirmadas
 

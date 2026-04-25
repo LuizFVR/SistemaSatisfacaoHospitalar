@@ -19,6 +19,12 @@ export type RefreshTokenPayload = {
   sub: string;
   jti: string;
   typ: 'refresh';
+  exp?: number;
+};
+
+export type LogoutResponse = {
+  message: string;
+  userId: string;
 };
 
 export type AuthTokensResponse = {

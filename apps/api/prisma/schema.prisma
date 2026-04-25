@@ -118,6 +118,7 @@ model Usuario {
   versoesPublicadas   FormularioVersao[]      @relation("VersaoPublicadaPor")
   formulariosAtivados SentorFormularioAtivo[] @relation("FormularioAtivadoPor")
   auditorias          Auditoria[]
+  sessoesAuth         SessaoAuth[]
 
   @@index([hospitalId])
   @@map("usuario")
@@ -135,6 +136,22 @@ model UsuarioSentor {
   @@unique([usuarioId, sentorId])
   @@index([sentorId])
   @@map("usuario_sentor")
+}
+
+model SessaoAuth {
+  id         String    @id @default(cuid())
+  usuarioId  String    @map("usuario_id")
+  tokenId    String    @unique @map("token_id")
+  tokenHash  String    @map("token_hash")
+  expiraEm   DateTime  @map("expira_em")
+  revogadoEm DateTime? @map("revogado_em")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  usuario    Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, revogadoEm])
+  @@index([expiraEm])
+  @@map("sessao_auth")
 }
 
 model Formulario {

@@ -82,6 +82,20 @@ Payload de refresh:
 }
 ```
 
+Payload de logout:
+
+```json
+{
+	"refreshToken": "<token>"
+}
+```
+
+Observacao:
+
+- O refresh token e persistido em sessao no banco.
+- No `refresh`, o token anterior e revogado e um novo par de tokens e emitido (rotacao).
+- No `logout`, a sessao vinculada ao refresh token informado e revogada.
+
 ## Sentores (MVP protegido)
 
 Todos os endpoints abaixo exigem Bearer token no header `Authorization`.

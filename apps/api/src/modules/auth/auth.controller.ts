@@ -9,9 +9,9 @@ import {
 import { Request } from 'express';
 import { z } from 'zod';
 import { AccessTokenGuard } from './access-token.guard';
-import { loginSchema, refreshSchema } from './auth.schemas';
+import { loginSchema, logoutSchema, refreshSchema } from './auth.schemas';
 import { AuthService } from './auth.service';
-import { AuthenticatedUser, AuthTokensResponse } from './auth.types';
+import { AuthenticatedUser, AuthTokensResponse, LogoutResponse } from './auth.types';
 
 type RequestWithUser = Request & { user?: AuthenticatedUser };
 
@@ -52,10 +52,21 @@ export class AuthController {
 
   @Post('logout')
   @UseGuards(AccessTokenGuard)
-  logout(@Req() req: RequestWithUser): { message: string; userId: string } {
+  async logout(
+    @Req() req: RequestWithUser,
+    @Body() body: unknown,
+  ): Promise<LogoutResponse> {
+    const user = req.user;
+
+    if (!user) {
+      throw new BadRequestException('Usuario autenticado ausente na requisicao.');
+    }
+
+    const input = parseBody(logoutSchema, body);
+
     return {
-      ...this.authService.logout(),
-      userId: req.user?.id ?? 'desconhecido',
+      ...(await this.authService.logout(user.id, input.refreshToken)),
+      userId: user.id,
     };
   }
 }
