@@ -42,6 +42,9 @@ Pendencias para continuidade:
 - Turnos sao padroes do sistema (fixos globais).
 - Deve existir anti-spam de 10 minutos.
 - Deve existir painel com alertas automaticos.
+- O backend da solucao deve rodar em servidor Debian (preferencialmente Debian 12 LTS ou superior).
+- O monitoramento e a gestao do sistema serao feitos em computadores do hospital, via navegador desktop.
+- A operacao deve considerar rede interna hospitalar e acesso remoto apenas por canal seguro (ex.: VPN).
 
 ## 2) Objetivos do Sistema
 
@@ -196,6 +199,9 @@ Acoes criticas que exigem auditoria:
 - RNF-08: interface responsiva e acessivel para desktop, tablet e mobile.
 - RNF-09: padrao visual moderno e minimalista, com linguagem simples e facil entendimento.
 - RNF-10: consistencia visual entre painel admin e fluxo publico de resposta.
+- RNF-11: backend homologado para execucao em Debian 12+ com estrategia de gerenciamento de processo (systemd ou containers).
+- RNF-12: painel administrativo compativel com navegadores desktop de ambiente corporativo hospitalar (Chrome, Edge e Firefox ESR).
+- RNF-13: operacao segura em rede hospitalar com controle de acesso interno e remoto (VPN/ACL).
 
 ## 8) Modelo de Dados Recomendado
 
@@ -388,10 +394,27 @@ Definicoes recomendadas:
 
 ## 14) Monitoramento e Operacao
 
+### 14.1 Observabilidade Minima
+
 - logs estruturados por request_id.
 - metricas de API (latencia, erro, throughput).
 - metricas de negocio (respostas/hora, CSAT diario, bloqueios anti-spam).
 - alertas tecnicos (queda de servico, aumento de erro 5xx).
+
+### 14.2 Operacao Alvo (Servidor Debian)
+
+- ambiente de producao padrao em Debian 12 LTS (ou superior).
+- API executada com reinicio automatico (systemd ou Docker Compose).
+- proxy reverso Nginx com TLS para exposicao segura dos endpoints.
+- rotina de backup do PostgreSQL e validacao periodica de restore.
+- timezone do servidor alinhado ao hospital (America/Sao_Paulo).
+
+### 14.3 Uso em Computadores do Hospital
+
+- painel administrativo sem instalacao local, acessado via navegador desktop.
+- perfil de uso focado em estacoes de trabalho do hospital (recepcao, supervisao, gestao).
+- sessao autenticada com timeout e renovacao controlada para ambiente compartilhado.
+- politicas de acesso por perfil com trilha de auditoria de acoes sensiveis.
 
 ## 15) Roadmap de Entrega (5 Sprints)
 
@@ -418,6 +441,7 @@ Definicoes recomendadas:
   - alertas automaticos
   - auditoria completa
   - hardening de seguranca e homologacao
+  - pacote operacional para Debian (deploy, rollback, backup e runbook)
 
 ## 16) Criterios de Aceite (Checklist)
 
@@ -450,6 +474,7 @@ Voce e um arquiteto e engenheiro de software senior. Implemente o sistema de sat
 8) visualizacao de CPF completo permitida para usuario_maior e gestor_sentor autorizado
 9) em nota baixa, coleta obrigatoria de sugestao de melhoria
 10) interface moderna e minimalista, com foco em clareza para qualquer usuario
+11) backend preparado para rodar em servidor Debian e operacao via computadores do hospital
 
 Objetivos tecnicos:
 - propor arquitetura backend/frontend
@@ -460,6 +485,7 @@ Objetivos tecnicos:
 - auditar acessos a dados sensiveis (especialmente CPF completo)
 - incluir testes automatizados (unitarios e integracao)
 - documentar execucao local e deploy
+- definir estrategia de deploy/operacao em Debian para contexto hospitalar
 
 Entregue por etapas:
 - Etapa 1: modelo de dados e migracoes
@@ -512,7 +538,7 @@ Sempre explique decisoes arquiteturais e riscos.
 
 ### 20.2 Backend Compativel
 
-- Node.js LTS
+- Node.js LTS (homologado em Debian 12 ou superior)
 - NestJS (API modular com boas praticas)
 - Prisma ORM (schema e migracoes)
 - PostgreSQL (persistencia principal)
@@ -553,6 +579,17 @@ Sempre explique decisoes arquiteturais e riscos.
 - Suporta evolucao do projeto sem trocar QR dos sentores.
 - Garante base robusta para comparativos por sentor e por turno.
 
+### 20.7 Diretrizes de Infraestrutura (Debian + Hospital)
+
+- Ambiente de producao padrao: servidor Debian 12 LTS (VM ou bare metal).
+- API executada como servico gerenciado (systemd) ou containers com restart automatico.
+- Proxy reverso Nginx com TLS para expor APIs e rotas publicas de forma segura.
+- PostgreSQL e Redis com monitoramento, backup e rotina de restauracao testada.
+- Painel administrativo acessado em computadores do hospital via navegador, sem instalacao local.
+- Compatibilidade minima do painel: Chrome/Edge corporativos atualizados e Firefox ESR.
+- Acesso remoto tecnico apenas por canal seguro (VPN) e com auditoria.
+- Runbook operacional obrigatorio com deploy, rollback, backup e resposta a incidentes.
+
 ## 21) Prompt GPT Codex Especifico para Stack React
 
 Use este prompt quando quiser que o Codex implemente diretamente com a stack acima:
@@ -572,6 +609,7 @@ Dominio e regras:
 9) permitir CPF completo para usuario_maior e gestor_sentor com auditoria obrigatoria de acesso
 10) em nota baixa, obrigar campo de sugestao de melhoria
 11) aplicar estilizacao moderna e minimalista, com UX simples para qualquer usuario
+12) considerar deploy em servidor Debian e uso do painel por equipes em computadores do hospital
 
 Stack obrigatoria:
 - Frontend: React 18 + TypeScript + Vite + React Router + TanStack Query + React Hook Form + Zod + Tailwind + shadcn/ui + ECharts
@@ -590,5 +628,6 @@ Requisitos de qualidade:
 - gerar codigo tipado, limpo e testavel
 - incluir validacoes de CPF e telefone
 - documentar setup local e comandos de execucao
+- documentar deploy/operacao em Debian e requisitos minimos dos navegadores do hospital
 - explicar decisoes arquiteturais e riscos
 """
