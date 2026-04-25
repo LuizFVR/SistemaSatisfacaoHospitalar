@@ -6,8 +6,8 @@ Objetivo deste documento: servir como base unica para implementacao com GPT Code
 ## Status de Implementacao (Controle de Parada)
 
 - Ultima atualizacao: 2026-04-24
-- PONTO_DE_PARADA_ATUAL: fim da Etapa 1 (base inicial) com schema Prisma modelado e API NestJS inicial pronta para evolucao.
-- Proximo passo imediato: criar e aplicar migracoes Prisma em banco local e iniciar Etapa 2 (auth + RBAC).
+- PONTO_DE_PARADA_ATUAL: Etapa 2 iniciada com modulo de autenticacao (login, refresh, logout) e base de RBAC na API NestJS.
+- Proximo passo imediato: criar e aplicar migracoes Prisma em banco local, popular usuario inicial e proteger os proximos endpoints com guardas/permissoes.
 
 Concluido nesta execucao:
 - [x] base do monorepo com scripts iniciais
@@ -15,11 +15,15 @@ Concluido nesta execucao:
 - [x] modulo Prisma e conexao de banco via variavel de ambiente
 - [x] modelagem inicial das entidades no schema Prisma
 - [x] utilitarios de dominio para regra de turno e nota baixa
+- [x] modulo Auth com endpoints de login, refresh e logout
+- [x] emissao e validacao de JWT (access e refresh)
+- [x] base de RBAC com decorator/guard para perfil global
+- [x] seed inicial de hospital e usuario administrador
 
 Pendencias para continuidade:
 - [ ] criar migracao inicial do banco (prisma migrate dev)
-- [ ] iniciar modulo de autenticacao (login, refresh, logout)
-- [ ] implementar RBAC para usuario_maior, gestor_sentor e operador_sentor
+- [ ] aplicar AuthGuard e RolesGuard nos modulos de dominio (sentores, formularios, relatorios)
+- [ ] adicionar revogacao de refresh token (persistencia de sessao) para logout invalidador
 
 ## 1) Contexto e Premissas Confirmadas
 

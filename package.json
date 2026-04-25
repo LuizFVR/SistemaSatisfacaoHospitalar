@@ -11,6 +11,7 @@
     "start:api": "npm run -w apps/api start",
     "prisma:generate": "npm run -w apps/api prisma:generate",
     "prisma:migrate": "npm run -w apps/api prisma:migrate",
+    "prisma:seed": "npm run -w apps/api prisma:seed",
     "prisma:format": "npm run -w apps/api prisma:format"
   }
 }

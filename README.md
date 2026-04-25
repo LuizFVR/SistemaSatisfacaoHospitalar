@@ -4,7 +4,7 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 
 ## Estrutura atual
 
-- `apps/api`: API backend com NestJS + Prisma (Etapa 1 iniciada)
+- `apps/api`: API backend com NestJS + Prisma (Etapa 2 iniciada: auth + RBAC base)
 - `apps/web-admin`: reservado para painel administrativo
 - `apps/web-public`: reservado para fluxo publico por QR
 - `packages/*`: reservado para pacotes compartilhados
@@ -38,15 +38,46 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 	npm run prisma:migrate
 	```
 
-5. Inicie a API em desenvolvimento:
+5. Crie/atualize usuario administrador inicial:
+
+	```bash
+	npm run prisma:seed
+	```
+
+6. Inicie a API em desenvolvimento:
 
 	```bash
 	npm run dev:api
 	```
 
-6. Valide o health check:
+7. Valide o health check:
 
 	- `http://localhost:3333/api/health`
+
+## Auth (MVP)
+
+Endpoints disponiveis:
+
+- `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
+
+Payload de login:
+
+```json
+{
+  "email": "admin@sarisfacao.local",
+  "senha": "Admin@123456"
+}
+```
+
+Payload de refresh:
+
+```json
+{
+  "refreshToken": "<token>"
+}
+```
 
 ## Scripts disponiveis
 
@@ -56,4 +87,5 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 - `npm run start:api`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
+- `npm run prisma:seed`
 - `npm run prisma:format`
