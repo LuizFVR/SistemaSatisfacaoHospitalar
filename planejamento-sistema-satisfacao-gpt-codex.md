@@ -6,8 +6,8 @@ Objetivo deste documento: servir como base unica para implementacao com GPT Code
 ## Status de Implementacao (Controle de Parada)
 
 - Ultima atualizacao: 2026-04-24
-- PONTO_DE_PARADA_ATUAL: Etapa 2 em andamento com Auth (login/refresh/logout) e modulo de Sentores protegido com RBAC.
-- Proximo passo imediato: aplicar migracoes Prisma no banco local e evoluir modulos de Formularios/Relatorios com guardas e permissoes.
+- PONTO_DE_PARADA_ATUAL: Etapa 2 em andamento com Auth, Sentores e Formularios protegidos por RBAC.
+- Proximo passo imediato: aplicar migracoes Prisma no banco local e evoluir modulos de Relatorios/Alertas com guardas e permissoes.
 
 Concluido nesta execucao:
 - [x] base do monorepo com scripts iniciais
@@ -22,10 +22,12 @@ Concluido nesta execucao:
 - [x] seed inicial de hospital e usuario administrador
 - [x] modulo Sentores com rotas protegidas (POST/GET/GET por id/PUT/PATCH status)
 - [x] geracao de slug e URL publica do QR no cadastro de sentor
+- [x] modulo Formularios com rotas protegidas (POST/GET/GET por id/PUT/POST versao/POST publicar)
+- [x] fluxo de versionamento e publicacao com status PUBLICADO
 
 Pendencias para continuidade:
 - [ ] criar migracao inicial do banco (prisma migrate dev)
-- [ ] aplicar AuthGuard e RolesGuard nos modulos de dominio restantes (formularios, relatorios, alertas)
+- [ ] aplicar AuthGuard e RolesGuard nos modulos de dominio restantes (relatorios, alertas)
 - [ ] registrar auditoria de eventos de autenticacao (login, refresh, logout, tentativa invalida)
 
 ## 1) Contexto e Premissas Confirmadas

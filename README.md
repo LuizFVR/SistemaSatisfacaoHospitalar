@@ -4,7 +4,7 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 
 ## Estrutura atual
 
-- `apps/api`: API backend com NestJS + Prisma (Etapa 2 iniciada: auth + RBAC base)
+- `apps/api`: API backend com NestJS + Prisma (Etapa 2 em andamento: auth + RBAC + sentores + formularios)
 - `apps/web-admin`: reservado para painel administrativo
 - `apps/web-public`: reservado para fluxo publico por QR
 - `packages/*`: reservado para pacotes compartilhados
@@ -107,6 +107,19 @@ Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
 - `PATCH /api/sentores/:id/status` (somente `USUARIO_MAIOR`)
 
 No cadastro, o sistema ja cria o QR permanente com slug unico e URL publica.
+
+## Formularios (MVP protegido)
+
+Todos os endpoints abaixo exigem Bearer token no header `Authorization`.
+
+- `POST /api/formularios` (`USUARIO_MAIOR`, `GESTOR_SENTOR`)
+- `GET /api/formularios` (`USUARIO_MAIOR`, `GESTOR_SENTOR`, `OPERADOR_SENTOR`)
+- `GET /api/formularios/:id` (`USUARIO_MAIOR`, `GESTOR_SENTOR`, `OPERADOR_SENTOR`)
+- `PUT /api/formularios/:id` (`USUARIO_MAIOR`, `GESTOR_SENTOR`)
+- `POST /api/formularios/:id/versoes` (`USUARIO_MAIOR`, `GESTOR_SENTOR`)
+- `POST /api/formularios/:id/versoes/:versaoId/publicar` (`USUARIO_MAIOR`, `GESTOR_SENTOR`)
+
+Ao publicar uma versao, o formulario passa para status `PUBLICADO`.
 
 ## Scripts disponiveis
 
