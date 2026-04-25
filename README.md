@@ -9,10 +9,51 @@ Base inicial do monorepo para implementacao do sistema descrito em `planejamento
 - `apps/web-public`: reservado para fluxo publico por QR
 - `packages/*`: reservado para pacotes compartilhados
 
-## Comandos
+## Pre-requisitos
+
+- Node.js 20+
+- npm 10+
+- PostgreSQL 15+ (local ou remoto)
+
+## Setup local (PowerShell)
+
+1. Instale as dependencias do monorepo:
+
+	```bash
+	npm install
+	```
+
+2. Crie o arquivo de ambiente da API a partir do exemplo:
+
+	```powershell
+	Copy-Item apps/api/.env.example apps/api/.env
+	```
+
+3. Ajuste o valor de `DATABASE_URL` em `apps/api/.env`.
+
+4. Gere o Prisma Client e execute a migracao inicial:
+
+	```bash
+	npm run prisma:generate
+	npm run prisma:migrate
+	```
+
+5. Inicie a API em desenvolvimento:
+
+	```bash
+	npm run dev:api
+	```
+
+6. Valide o health check:
+
+	- `http://localhost:3333/api/health`
+
+## Scripts disponiveis
 
 - `npm install`
 - `npm run dev:api`
 - `npm run build`
+- `npm run start:api`
 - `npm run prisma:generate`
 - `npm run prisma:migrate`
+- `npm run prisma:format`
